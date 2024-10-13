@@ -1,6 +1,7 @@
 
 import sys
 import requests
+from collections import defaultdict
 from html.parser import HTMLParser
 
 
@@ -25,7 +26,7 @@ class Parser (HTMLParser):
   foundReferencesHeader = False # true when <h2 id="References"> found
   linksCount = 0                # count of <a> tags found
   referencesCount = 0           # count of <li> within <ol class="references">
-  wordMap = dict()
+  wordMap = defaultdict(int)    # allows values to have default value 0 if key not present
 
 
   ## Override of HTMLParser.
@@ -82,13 +83,13 @@ class Parser (HTMLParser):
 
   ## Tokenise 'data' to separate words.
   ## If word is alpha and not in the ignore list, add to word map.
-  def updateCount(self, data):
+  def updateCount(self, data: str):
     tokens = data.split()
     
     for word in tokens:
       if word.isalpha() and word not in ignoreList:
         # if word not found, 0 is returned, to which we add 1, initialising the count to 1
-        self.wordMap[word] = self.wordMap.get(word, 0) + 1  
+        self.wordMap[word] += 1
       
 
 
@@ -96,31 +97,33 @@ class Parser (HTMLParser):
 ## Returns a tuple: (valid, content)
 ##  valid is false: the request failed and content is empty
 ##  valid is true: content contains the complete HTML document
-def scrape(url):
+def scrape(url: str):
   print("Scraping: " + url)
   # send request with a reasonable timeout
   # use 'with' for resource management, handling closing of the connection
   with requests.get(url, timeout = 5) as rsp: 
     valid = rsp.status_code == 200 # status code for HTTP OK
   
+  # return (True, <content>) if request OK
+  # otherwise: (False, "")
   return (True, rsp.text) if valid else (False, "")
 
 
 
 ## Using the HTML parser, count and report the word count, hyper links and references.
 ## Unique words and words to ignore are also reported.
-def count(html, printWordMap):
+def count(html: str, printWordDict: bool):
   parser = Parser() # create parser instance
   parser.feed(html) # parse the HTML
 
   if parser.valid: # if <body> tag found
-    print("Ignoring words: {0}".format(ignoreList))
-    print("Unique words: {0}".format(len(parser.wordMap)))
-    print("Hyperlinks: {0}".format(parser.linksCount))
-    print("References: {0}".format(parser.referencesCount))
+    print(f"Ignoring words: {ignoreList}")
+    print(f"Unique words: {len(parser.wordMap)}")
+    print(f"Hyperlinks: {parser.linksCount}")
+    print(f"References: {parser.referencesCount}")
     
     # only print word map if first command line argument is "wordmap"
-    if printWordMap:
+    if printWordDict:
       print(parser.wordMap)
 
 
@@ -129,37 +132,43 @@ def count(html, printWordMap):
 ## If the GET request fails, reports the failure and falls through.
 def run():
   # list of articles
+  # NOTE: Miss Meyers is the short test Wikipedia article, easier to read word dict in terminal
   urls =  [
             "https://en.wikipedia.org/wiki/Python_(programming_language)",
             "https://en.wikipedia.org/wiki/C++",
             "https://en.wikipedia.org/wiki/Bjarne_Stroustrup",
-            "https://en.wikipedia.org/wiki/Cat"
+            "https://en.wikipedia.org/wiki/Cat",            
+            "https://en.wikipedia.org/wiki/Miss_Meyers"  
           ]
   
-  url = ""
-  printWordMap = False
   
-  # if URL and perhaps wordmap 
+
+  url = ""  # either URL from command line or in the urls list
+  printWordDict = False  # only print the word dictionary if requested
+  
+  
   if len(sys.argv) == 3:
+    # URL and wordmap args present
     url = sys.argv[1]
-    printWordMap = sys.argv[2].lower() == "wordmap"
+    printWordDict = sys.argv[2].lower() == "wordmap"
   elif len(sys.argv) == 2:
+    # check for wordmap arg
     if sys.argv[1].lower() == "wordmap":
-      printWordMap = True
+      printWordDict = True
     else:
-      url = sys.argv[1] # arg should be be URL
-
-
-  # select the article to scrape if not set on command line
-  if url == "":
+      # arg is not wordmap, so assume URL
+      url = sys.argv[1]
+  else:
+    # default URL and don't print word dictionary
     url = urls[3]
+
 
   # send HTTP GET request, returning a tuple: (bool, string)
   (valid, content) = scrape(url) 
 
   # valid True if 200 OK response was received
   if valid:     
-    count(content, printWordMap)
+    count(content, printWordDict)
   else:
     print("Request failed")
 
