@@ -4,6 +4,16 @@ import requests
 from collections import defaultdict
 from html.parser import HTMLParser
 
+###
+### If 'print' present, the word counts are printed.
+### If <URL> not present, a default URL is used.
+### 
+###   1. activity_c.py
+###   2. activity_c.py print
+###   3. activity_c.py <URL>
+###   4. activity_c.py <URL> print
+### 
+
 
 # words to ignore in a set. A list may be more efficient, depending
 # on how it is implemented (i.e. a vector/array in contigious memory) rather than node-based list
@@ -143,34 +153,33 @@ def run():
   
   
 
-  url = ""  # either URL from command line or in the urls list
+  url = urls[3]  # either URL from command line or in the urls list
   printWordDict = False  # only print the word dictionary if requested
   
   
   if len(sys.argv) == 3:
     # URL and wordmap args present
     url = sys.argv[1]
-    printWordDict = sys.argv[2].lower() == "wordmap"
+    printWordDict = sys.argv[2].lower() == "print"
   elif len(sys.argv) == 2:
     # check for wordmap arg
-    if sys.argv[1].lower() == "wordmap":
+    if sys.argv[1].lower() == "print":
       printWordDict = True
     else:
       # arg is not wordmap, so assume URL
       url = sys.argv[1]
-  else:
-    # default URL and don't print word dictionary
-    url = urls[3]
-
+  
 
   # send HTTP GET request, returning a tuple: (bool, string)
   (valid, content) = scrape(url) 
+
 
   # valid True if 200 OK response was received
   if valid:     
     count(content, printWordDict)
   else:
     print("Request failed")
+
 
 
 run()
