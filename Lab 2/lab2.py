@@ -220,6 +220,6 @@ columnNames = ['capital_run_length_average',
 for col in columnNames:
   repeated = dataframe[col].value_counts().nlargest(5).index.tolist()
   print((f'{col}'
-          '\n\tMean: {dataframe[col].mean()}'
-          '\n\tStd. Deviation: {dataframe[col].std() }'
-          '\n\tFive Most Repeated: {repeated}'))
+         f'\n\tMean: {dataframe[col].mean()}'
+         f'\n\tStd. Deviation: {dataframe[col].std() }'
+         f'\n\tFive Most Repeated: {repeated}'))
