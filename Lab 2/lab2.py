@@ -206,3 +206,20 @@ print(dataframe.values[0:nMaxRows, 0:nMaxCols])
 
 with pd.option_context('display.max_rows', nMaxRows, 'display.max_columns', nMaxCols):
     print(dataset.data.original)
+
+"""# Activity C
+
+> I've reduced this to a few columns because there are so many.
+"""
+
+columnNames = ['capital_run_length_average',
+               'capital_run_length_total',
+               'capital_run_length_longest']
+
+
+for col in columnNames:
+  repeated = dataframe[col].value_counts().nlargest(5).index.tolist()
+  print((f'{col}'
+          '\n\tMean: {dataframe[col].mean()}'
+          '\n\tStd. Deviation: {dataframe[col].std() }'
+          '\n\tFive Most Repeated: {repeated}'))
