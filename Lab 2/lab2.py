@@ -210,6 +210,8 @@ with pd.option_context('display.max_rows', nMaxRows, 'display.max_columns', nMax
 """# Activity C
 
 > I've reduced this to a few columns because there are so many.
+
+## Task A
 """
 
 columnNames = ['capital_run_length_average',
@@ -221,5 +223,40 @@ for col in columnNames:
   repeated = dataframe[col].value_counts().nlargest(5).index.tolist()
   print((f'{col}'
          f'\n\tMean: {dataframe[col].mean()}'
-         f'\n\tStd. Deviation: {dataframe[col].std() }'
+         f'\n\tStd. Deviation: {dataframe[col].std()}'
          f'\n\tFive Most Repeated: {repeated}'))
+
+"""## Task B
+
+Select the columns which represent the frequency of words, i.e. `word_freq_you` is how often "you" appears. The word frequency columns are from position 0 to 10th from the end.
+"""
+
+wordColumns = dataframe.columns[0:-10].tolist();
+print(wordColumns)
+
+"""To show the most common words, we can sum each `word_freq_*` columns:"""
+
+wordFrequencySums = dataframe[wordColumns].apply(np.sum, axis=0)
+
+"""The column names are now the index of the series returned by `apply()`. The names are cumbersome (`word_freq_you`, `word_freq_make`, etc) so snip off the `word_freq_` to leave just the word and update the index before plotting:"""
+
+indexes = []
+for name in wordFrequencySums.index:
+  indexes.append(name[name.rfind('_')+1:])
+
+wordFrequencySums.index = indexes
+wordFrequencySums.plot.bar()
+
+"""Plot the first average length of capital letters in the first 20 emails. The x-axis is each email:"""
+
+columnName = 'capital_run_length_average'
+plot = dataframe[columnName][0:20].plot.bar(rot=0, title=columnName)
+plot.set_ylabel('Occurrences')
+plot.get_xaxis().set_visible(False)
+
+"""## Task C
+- This dataset is not ideal for this lab, with so many features and rows
+- The data is from a study some years ago, within a company (hence the `word_freq_george` column), and seems to use a simplistic set of features for detecting spam emails
+- Looking at the above bar chart, if we exclude "george", it seems "you", "your" and "will" are most commonly used. The next step would be to find a connection between these common words and the email classed as spam
+"""
+
